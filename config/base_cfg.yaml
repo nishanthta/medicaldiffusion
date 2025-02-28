@@ -1,3 +1,25 @@
 defaults:
-  - dataset: ??? 
-  - model: ??? 
+  - dataset: default
+  - model: vq_gan_3d
+
+dataset:
+  root_dir: /media/nthumbav/m2/anonymized_niftis_rst/
+
+model:
+  gpus: 1
+  default_root_dir_postfix: 'own_dataset'
+  precision: 16
+  embedding_dim: 8
+  n_hiddens: 16
+  downsample: [2, 2, 2]
+  num_workers: 32
+  gradient_clip_val: 1.0
+  lr: 3e-4
+  discriminator_iter_start: 10000
+  perceptual_weight: 4
+  image_gan_weight: 1
+  video_gan_weight: 1
+  gan_feat_weight: 4
+  batch_size: 2
+  n_codes: 16384
+  accumulate_grad_batches: 1

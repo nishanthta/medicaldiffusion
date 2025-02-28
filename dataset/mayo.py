@@ -11,11 +11,13 @@ PREPROCESSING_TRANSORMS = tio.Compose([
 ])
 
 TRAIN_TRANSFORMS = tio.Compose([
+    # tio.RandomAffine(scales=(0.03, 0.03, 0), degrees=(
+    # 0, 0, 3), translation=(4, 4, 0)),
     tio.RandomFlip(axes=(1), flip_probability=0.5),
 ])
 
 
-class DEFAULTDataset(Dataset):
+class MayoDataset(Dataset):
     def __init__(self, root_dir: str):
         super().__init__()
         self.root_dir = root_dir

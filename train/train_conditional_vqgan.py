@@ -1,7 +1,6 @@
 "Adapted from https://github.com/SongweiGe/TATS"
 
-import os, sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import os
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
