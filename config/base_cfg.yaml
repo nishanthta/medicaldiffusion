@@ -3,11 +3,18 @@ defaults:
   - model: vq_gan_3d
 
 dataset:
-  root_dir: /media/nthumbav/m2/anonymized_niftis_rst/
+  root_dir: ../full_dataset/anonymized_niftis_rst/
 
 model:
   gpus: 1
+  default_root_dir: '/ocean/projects/med240010p/thumbava/medicaldiffusion/logs'
   default_root_dir_postfix: 'own_dataset'
+  results_folder_postfix: 'own_dataset'
+  vqgan_ckpt: 'logs/DEFAULT/own_dataset/lightning_logs/version_29430362/checkpoints/latest_checkpoint.ckpt'
+  diffusion_img_size: 32
+  diffusion_depth_size: 32
+  diffusion_num_channels: 8
+  dim_mults: [1,2,4,8]
   precision: 16
   embedding_dim: 8
   n_hiddens: 16
@@ -20,6 +27,6 @@ model:
   image_gan_weight: 1
   video_gan_weight: 1
   gan_feat_weight: 4
-  batch_size: 2
+  batch_size: 1
   n_codes: 16384
   accumulate_grad_batches: 1

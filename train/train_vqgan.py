@@ -87,6 +87,7 @@ def run(cfg: DictConfig):
         accelerator=accelerator,
     )
 
+
     trainer.fit(model, train_dataloader, val_dataloader)
 
 
