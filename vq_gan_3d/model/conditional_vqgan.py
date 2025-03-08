@@ -602,7 +602,7 @@ class ConditionalNLayerDiscriminator(nn.Module):
         self.condition_dim = condition_dim
 
         # Projection for condition embedding
-        self.condition_proj = nn.Linear(condition_dim, ndf)
+        self.condition_proj = nn.Linear(condition_dim, 1)
 
         kw = 4
         padw = int(np.ceil((kw-1.0)/2))
@@ -671,7 +671,7 @@ class ConditionalNLayerDiscriminator3D(nn.Module):
         self.condition_dim = condition_dim
 
         # Projection for condition embedding
-        self.condition_proj = nn.Linear(condition_dim, ndf)
+        self.condition_proj = nn.Linear(condition_dim, 1)
 
         kw = 4
         padw = int(np.ceil((kw-1.0)/2))

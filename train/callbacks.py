@@ -35,10 +35,14 @@ class ImageLogger(Callback):
         for k in images:
             images[k] = (images[k] + 1.0) * 127.5  # std + mean
             torch.clamp(images[k], 0, 255)
-            grid = torchvision.utils.make_grid(images[k], nrow=4)
-            grid = grid
-            grid = grid.transpose(0, 1).transpose(1, 2).squeeze(-1)
-            grid = grid.numpy()
+            # grid = torchvision.utils.make_grid(images[k], nrow=4)
+            grid = images[k]
+            # grid = grid
+            # grid = grid.transpose(0, 1).transpose(1, 2).squeeze(-1)
+            try:
+                grid = grid.numpy()[0][0]
+            except:
+                continue
             grid = (grid).astype(np.uint8)
             filename = "{}_gs-{:06}_e-{:06}_b-{:06}.png".format(
                 k,
@@ -141,6 +145,8 @@ class VideoLogger(Callback):
             with torch.no_grad():
                 videos = pl_module.log_videos(
                     batch, split=split, batch_idx=batch_idx)
+                keys = list(videos.keys())
+                videos = {k: videos[k] for k in keys[:2]}
 
             for k in videos:
                 N = min(videos[k].shape[0], self.max_videos)

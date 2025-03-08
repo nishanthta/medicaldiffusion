@@ -1,12 +1,16 @@
-"Adapted from https://github.com/SongweiGe/TATS"
+"""
+Adapted from https://github.com/SongweiGe/TATS
+Modified to work with conditional VQ-GAN
+"""
 
-import os
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
-from ddpm.diffusion import default
-from vq_gan_3d.model import VQGAN
+from vq_gan_3d.model.conditional_vqgan import ConditionalVQGAN
 from train.callbacks import ImageLogger, VideoLogger
+# from train.conditional_callbacks import ConditionalImageLogger, ConditionalVideoLogger
 from train.get_dataset import get_dataset
 import hydra
 from omegaconf import DictConfig, open_dict
@@ -16,13 +20,25 @@ from omegaconf import DictConfig, open_dict
 def run(cfg: DictConfig):
     pl.seed_everything(cfg.model.seed)
 
+    # Add condition-related configurations if they don't exist
+    with open_dict(cfg):
+        if not hasattr(cfg.model, 'num_conditions'):
+            cfg.model.num_conditions = 3  # Default: arterial, venous, delayed
+        if not hasattr(cfg.model, 'condition_dim'):
+            cfg.model.condition_dim = 64  # Default dimension for condition embedding
+
+    # Get dataset with condition information
     train_dataset, val_dataset, sampler = get_dataset(cfg)
+    
+    # Make sure dataset returns condition information
+    # The dataset should return a dict with 'data' and 'condition' keys
+    
     train_dataloader = DataLoader(dataset=train_dataset, batch_size=cfg.model.batch_size,
                                   num_workers=cfg.model.num_workers, sampler=sampler)
     val_dataloader = DataLoader(val_dataset, batch_size=cfg.model.batch_size,
                                 shuffle=False, num_workers=cfg.model.num_workers)
 
-    # automatically adjust learning rate
+    # Automatically adjust learning rate
     bs, base_lr, ngpu, accumulate = cfg.model.batch_size, cfg.model.lr, cfg.model.gpus, cfg.model.accumulate_grad_batches
 
     with open_dict(cfg):
@@ -32,7 +48,8 @@ def run(cfg: DictConfig):
     print("Setting learning rate to {:.2e} = {} (accumulate_grad_batches) * {} (num_gpus/8) * {} (batchsize/4) * {:.2e} (base_lr)".format(
         cfg.model.lr, accumulate, ngpu/8, bs/4, base_lr))
 
-    model = VQGAN(cfg)
+    # Initialize conditional VQ-GAN
+    model = ConditionalVQGAN(cfg, num_conditions=cfg.model.num_conditions)
 
     callbacks = []
     callbacks.append(ModelCheckpoint(monitor='val/recon_loss',
@@ -41,14 +58,16 @@ def run(cfg: DictConfig):
                      save_top_k=-1, filename='{epoch}-{step}-{train/recon_loss:.2f}'))
     callbacks.append(ModelCheckpoint(every_n_train_steps=10000, save_top_k=-1,
                      filename='{epoch}-{step}-10000-{train/recon_loss:.2f}'))
+    
+    # Custom loggers that handle conditional data
     callbacks.append(ImageLogger(
         batch_frequency=750, max_images=4, clamp=True))
     callbacks.append(VideoLogger(
         batch_frequency=1500, max_videos=4, clamp=True))
 
-    # load the most recent checkpoint file
+    # Load the most recent checkpoint file
     base_dir = os.path.join(cfg.model.default_root_dir, 'lightning_logs')
-    if os.path.exists(base_dir):
+    if os.path.exists(base_dir) and cfg.model.resume_from_ckpt:
         log_folder = ckpt_file = ''
         version_id_used = step_used = 0
         for folder in os.listdir(base_dir):

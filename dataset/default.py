@@ -35,10 +35,10 @@ class DEFAULTDataset(Dataset):
         self.file_paths = self.get_data_files()
 
     def get_data_files(self):
-        subfolder_names = os.listdir(self.root_dir)
-        folder_names = [os.path.join(
-            self.root_dir, subfolder, 'arterial.nii.gz') for subfolder in subfolder_names]
-        return folder_names
+        # subfolder_names = os.listdir(self.root_dir)
+        file_names = []
+        file_names = [os.path.join(self.root_dir, file) for file in os.listdir(self.root_dir)]
+        return file_names
 
     def __len__(self):
         return len(self.file_paths)
@@ -49,4 +49,10 @@ class DEFAULTDataset(Dataset):
             img = img.data.permute(-1, 0, 1, 2)
         img = self.preprocessing(img)
         img = self.transforms(img)
-        return {'data': img.data.permute(0, -1, 1, 2)}
+        if 'delay' in self.file_paths[idx]:
+            condition = 2
+        elif 'venous' in self.file_paths[idx]:
+            condition = 1
+        else:
+            condition = 0
+        return {'data': img.data.permute(0, -1, 1, 2), 'condition': torch.tensor(condition, dtype=torch.long)}
